@@ -1,0 +1,137 @@
+---
+title: TP1 - Ejercicio 13
+tags: [senales-y-sistemas, itba, guia-tp1]
+order: 1
+---
+
+import SolapeTriangulos from "../../../components/SolapeTriangulos.astro";
+import PedazosIntegral from "../../../components/PedazosIntegral.astro";
+
+Enunciado. Calcular $E_x$, $P_x$, $E_{x_i}$, $P_{x_i}$, $E_{x_p}$, $P_{x_p}$, $\bar x$ de las siguientes señales
+
+a) $x(t) = u(t)$
+b) $x(t) = 2e^{j\pi 6t}$
+c) $x(t) = \Lambda(t-a/2)$
+
+## Definiciones que se usan en todo el ejercicio
+
+Para una señal $x(t)$ real o compleja se define la energía como
+
+$$E_x = \int_{-\infty}^{\infty} |x(t)|^2 \, dt$$
+
+la potencia media como
+
+$$P_x = \lim_{T\to\infty} \frac{1}{2T} \int_{-T}^{T} |x(t)|^2 \, dt$$
+
+y el valor medio como
+
+$$\bar{x} = \lim_{T\to\infty} \frac{1}{2T} \int_{-T}^{T} x(t) \, dt$$
+
+La parte par y la parte impar se obtienen con
+
+$$x_p(t) = \frac{x(t) + x(-t)}{2}, \qquad x_i(t) = \frac{x(t) - x(-t)}{2}$$
+
+y $E_{x_p}, P_{x_p}, E_{x_i}, P_{x_i}$ son la energía y potencia de esas dos señales, calculadas con las mismas fórmulas de arriba pero reemplazando $x(t)$ por $x_p(t)$ o $x_i(t)$. Esto es exactamente lo que pide demostrar el ítem 12 de la guía, así que sus resultados sirven de chequeo acá.
+
+## a) $x(t) = u(t)$
+
+**$E_x$.** Como $|u(t)|^2 = u(t)$ (el escalón vale $0$ o $1$),
+
+$$E_x = \int_0^\infty 1 \, dt \to \infty$$
+
+**$P_x$.**
+
+$$P_x = \lim_{T\to\infty} \frac{1}{2T}\int_0^T 1\,dt = \frac{1}{2}$$
+
+**Partes par e impar.** Conviene escribir $u(t) = \tfrac{1}{2} + \tfrac{1}{2}\operatorname{sgn}(t)$, que ya es la descomposición en par más impar
+
+$$x_p(t) = \frac{1}{2} \ \text{(constante)}, \qquad x_i(t) = \frac{1}{2}\operatorname{sgn}(t)$$
+
+Ambas tienen energía infinita, y sus potencias son
+
+$$P_{x_p} = \lim_{T\to\infty}\frac{1}{2T}\int_{-T}^{T} \frac{1}{4}\,dt = \frac{1}{4}, \qquad P_{x_i} = \frac{1}{4}$$
+
+Chequeo del ítem 12, $P_x = P_{x_p}+P_{x_i} = \tfrac14+\tfrac14 = \tfrac12$, coincide.
+
+$$\bar{x} = \lim_{T\to\infty}\frac{1}{2T}\int_0^T 1\,dt = \frac{1}{2} = \bar{x}_p$$
+
+## b) $x(t) = 2e^{j6\pi t}$
+
+$$|x(t)|^2 = 4 \implies E_x \to \infty, \qquad P_x = \lim_{T\to\infty}\frac{1}{2T}\int_{-T}^{T}4\,dt = 4$$
+
+Con $x(t) = 2\cos(6\pi t) + j2\sin(6\pi t)$ y $x(-t)=2\cos(6\pi t)-j2\sin(6\pi t)$,
+
+$$x_p(t) = 2\cos(6\pi t), \qquad x_i(t) = j\,2\sin(6\pi t)$$
+
+$$|x_p(t)|^2 = 4\cos^2(6\pi t), \qquad |x_i(t)|^2 = 4\sin^2(6\pi t)$$
+
+ambas de energía infinita, y como el promedio temporal de $\cos^2$ o $\sin^2$ es $\tfrac12$,
+
+$$P_{x_p} = 4\cdot\frac12 = 2, \qquad P_{x_i} = 4\cdot\frac12 = 2$$
+
+Chequeo, $P_x = P_{x_p}+P_{x_i} = 2+2=4$. Y
+
+$$\bar{x} = \lim_{T\to\infty}\frac{1}{2T}\int_{-T}^{T} 2e^{j6\pi t}\,dt = \lim_{T\to\infty}\frac{\sin(6\pi T)}{3\pi T} = 0$$
+
+## c) $x(t) = \Lambda\left(t-\dfrac{a}{2}\right)$
+
+Con $\Lambda(t) = 1-2|t|$ para $|t|\le 1/2$ y $0$ fuera de ese rango (el pulso triangular estándar de la materia, ancho $1$, altura $1$).
+
+**Energía.** Un corrimiento en el tiempo no cambia la energía, así que con $\tau=t-a/2$
+
+$$E_x = \int_{-1/2}^{1/2}(1-2|\tau|)^2\,d\tau = 2\int_0^{1/2}(1-2\tau)^2\,d\tau = \frac{1}{3}$$
+
+independiente de $a$.
+
+**Potencia y valor medio.** Al tener soporte acotado es una señal de energía finita, y por el ítem 11 eso implica $P_x=0$. Además, para $T$ mayor que el soporte la integral $\int_{-T}^T x(t)\,dt$ queda fija en el área total del triángulo, así que al dividir por $2T\to\infty$
+
+$$P_x = 0, \qquad \bar{x}=0$$
+
+**$P_{x_p}$ y $P_{x_i}$.** Por el ítem 12, $P_x=P_{x_p}+P_{x_i}$, con ambos términos no negativos. Como $P_x=0$, necesariamente
+
+$$P_{x_p}=0, \qquad P_{x_i}=0$$
+
+**$E_{x_p}$ y $E_{x_i}$.** Acá sí importa $a$, porque el triángulo desplazado deja de ser simétrico respecto del origen salvo que $a=0$.
+
+Con $x(-t)=\Lambda(t+a/2)$ (porque $\Lambda$ es par), llamamos
+
+$$f_1(t) = x(t) = \Lambda(t-a/2), \qquad f_2(t) = x(-t) = \Lambda(t+a/2)$$
+
+Entonces $x_p=(f_1+f_2)/2$, $x_i=(f_1-f_2)/2$, y elevando al cuadrado y sumando o restando las energías se cancelan los términos cruzados o los cuadrados, quedando
+
+$$E_{x_p}+E_{x_i} = \frac13, \qquad E_{x_p}-E_{x_i} = \int_{-\infty}^{\infty} f_1(t) f_2(t)\,dt =: I(a)$$
+
+$f_1$ vive en $\left[\dfrac{a}{2}-\dfrac12,\ \dfrac{a}{2}+\dfrac12\right]$ y $f_2$ vive en $\left[-\dfrac{a}{2}-\dfrac12,\ -\dfrac{a}{2}+\dfrac12\right]$. Estos dos intervalos se tocan cuando $|a|\ge 1$ (ver el gráfico interactivo de abajo), caso en el que $I(a)=0$ directamente.
+
+<SolapeTriangulos />
+
+Cuando $|a|<1$ los soportes se solapan, y hay que integrar el producto $f_1 f_2$ en la zona de solape. Ahí adentro, tanto $f_1$ como $f_2$ tienen un valor absoluto que cambia de fórmula justo en su vértice ($t=a/2$ para $f_1$, $t=-a/2$ para $f_2$), así que la franja de solape se parte en tres pedazos usando esos dos vértices como cortes.
+
+<PedazosIntegral />
+
+Resolviendo cada pedazo por separado (removiendo el valor absoluto según el signo, multiplicando las dos rectas resultantes, e integrando) y sumando, se llega a
+
+$$I(a) = \frac13-2a^2+2a^3 \qquad \text{para } 0\le a\le \frac12$$
+
+Con el mismo método, partiendo la franja de solape en dos pedazos en vez de tres (porque para $\dfrac12\le a\le 1$ solo uno de los dos vértices cae dentro de la franja), se obtiene el otro tramo. Usando $E_{x_p}=\dfrac16+\dfrac{I(a)}{2}$ y $E_{x_i}=\dfrac13-E_{x_p}$ en cada tramo, el resultado final, en función de $|a|$, queda
+
+$$
+E_{x_p} =
+\begin{cases}
+\dfrac13 - a^2 + |a|^3 & 0\le|a|\le \dfrac12\\[2mm]
+\dfrac16 + \dfrac{(1-|a|)^3}{3} & \dfrac12\le|a|\le 1\\[2mm]
+\dfrac16 & |a|\ge 1
+\end{cases}
+\qquad
+E_{x_i} = \frac13 - E_{x_p}
+$$
+
+Las tres ramas empalman en $|a|=1/2$ y en $|a|=1$, y en $a=0$ dan $E_{x_p}=1/3$, $E_{x_i}=0$, como corresponde porque ahí $x(t)=\Lambda(t)$ ya es par.
+
+## Resumen
+
+| Señal | $E_x$ | $P_x$ | $E_{x_p}$ | $P_{x_p}$ | $E_{x_i}$ | $P_{x_i}$ | $\bar{x}$ |
+|---|---|---|---|---|---|---|---|
+| $u(t)$ | $\infty$ | $1/2$ | $\infty$ | $1/4$ | $\infty$ | $1/4$ | $1/2$ |
+| $2e^{j6\pi t}$ | $\infty$ | $4$ | $\infty$ | $2$ | $\infty$ | $2$ | $0$ |
+| $\Lambda(t-a/2)$ | $1/3$ | $0$ | ver fórmula por tramos | $0$ | $1/3-E_{x_p}$ | $0$ | $0$ |

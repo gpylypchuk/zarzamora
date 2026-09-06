@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gpylypchuk.github.io/zarzamora/sitemap-index.xml

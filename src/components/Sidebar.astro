@@ -1,0 +1,62 @@
+---
+import { getNavGroups, slugToHref } from "../utils/nav";
+import { SITE_NAME, SITE_TAGLINE } from "../site.config.mjs";
+
+const groups = await getNavGroups();
+const currentPath = Astro.url.pathname;
+const homeHref = import.meta.env.BASE_URL;
+---
+
+<aside class="sidebar">
+  <a class="site-title" href={homeHref}>{SITE_NAME}</a>
+  <div class="site-tagline">{SITE_TAGLINE}</div>
+
+  {groups.map((group) => (
+    <div class="nav-group">
+      <div class="nav-group-label">
+        {group.indexSlug ? (
+          <a
+            href={slugToHref(group.indexSlug)}
+            class:list={["nav-link", { active: currentPath === slugToHref(group.indexSlug) }]}
+            style="font-family: var(--font-mono); text-transform: uppercase; font-size: 0.68rem; letter-spacing: 0.08em; padding: 0;"
+          >
+            {group.label}
+          </a>
+        ) : (
+          group.label
+        )}
+      </div>
+      {group.items.map((item) => {
+        const href = slugToHref(item.id);
+        return (
+          <a href={href} class:list={["nav-link", { active: currentPath === href }]}>
+            {item.data.title}
+          </a>
+        );
+      })}
+    </div>
+  ))}
+
+  <div class="nav-group" id="search">
+    <div class="nav-group-label">Buscar</div>
+    <div id="pagefind-search"></div>
+  </div>
+</aside>
+
+<script define:vars={{ base: import.meta.env.BASE_URL.replace(/\/$/, "") }}>
+  // Pagefind solo existe después de un build (npm run build), no en dev.
+  // Si el archivo no existe (404), el script simplemente no carga y el
+  // buscador queda vacío, sin romper el resto de la página.
+  const script = document.createElement("script");
+  script.src = `${base}/pagefind/pagefind-ui.js`;
+  script.onload = () => {
+    if (window.PagefindUI) {
+      new window.PagefindUI({
+        element: "#pagefind-search",
+        showSubResults: true,
+        showImages: false,
+      });
+    }
+  };
+  document.head.appendChild(script);
+</script>

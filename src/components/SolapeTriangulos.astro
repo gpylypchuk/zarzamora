@@ -1,0 +1,214 @@
+---
+// Antes vivía como un archivo .html standalone embebido en un <iframe>,
+// con su propia paleta de colores y su propio matchMedia para detectar
+// modo oscuro. Ahora es un componente más de la página, así que hereda
+// el tema del sitio directamente vía variables CSS (var(--accent),
+// etc.), sin ninguna lógica de color propia.
+---
+
+<div class="solape-wrap">
+  <p class="sub">Mové el deslizador para cambiar a y ver cómo se separan o se superponen los dos triángulos.</p>
+
+  <div class="controls">
+    <label for="aSlider">a =</label>
+    <input type="range" id="aSlider" min="0" max="2.2" step="0.01" value="0.5" />
+    <span class="aval" id="aVal">0.50</span>
+  </div>
+  <div class="presets">
+    <button data-a="0">a = 0</button>
+    <button data-a="0.3">a = 0.3</button>
+    <button data-a="0.5">a = 0.5</button>
+    <button data-a="1">a = 1</button>
+    <button data-a="2">a = 2</button>
+  </div>
+
+  <svg id="plot-solape" viewBox="0 0 640 460" xmlns="http://www.w3.org/2000/svg"></svg>
+
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--accent)"></i> f&#8321;(t) = &Lambda;(t&minus;a/2)</span>
+    <span><i class="swatch" style="background:var(--moss)"></i> f&#8322;(t) = &Lambda;(t+a/2)</span>
+    <span><i class="swatch" style="background:var(--accent-soft); border:1px solid var(--accent)"></i> zona de solape</span>
+    <span><i class="swatch" style="background:var(--heading)"></i> x<sub>p</sub>(t)</span>
+    <span><i class="swatch" style="background:var(--text); border-bottom:2px dashed var(--text)"></i> x<sub>i</sub>(t)</span>
+  </div>
+
+  <div class="results">
+    <div class="card"><div class="lbl">E<sub>x</sub></div><div class="val">1/3</div></div>
+    <div class="card"><div class="lbl">E<sub>xp</sub></div><div class="val" id="expVal">-</div></div>
+    <div class="card"><div class="lbl">E<sub>xi</sub></div><div class="val" id="exiVal">-</div></div>
+  </div>
+
+  <p class="note" id="statusNote"></p>
+</div>
+
+<style>
+  .solape-wrap { margin: 24px 0; }
+  .sub { margin: 0 0 16px; font-size: 0.85rem; color: var(--text-muted); }
+  .controls { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+  .controls label { font-family: var(--font-display); font-size: 0.88rem; font-weight: 600; color: var(--heading); }
+  input[type="range"] { flex: 1; min-width: 180px; accent-color: var(--accent); }
+  .aval { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); min-width: 54px; text-align: right; font-size: 0.9rem; }
+  .presets { display: flex; gap: 6px; margin: 10px 0 18px; flex-wrap: wrap; }
+  .presets button {
+    font-family: var(--font-body);
+    border: 1px solid var(--border);
+    background: transparent;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    color: var(--text);
+  }
+  .presets button:hover { background: var(--accent-soft); border-color: var(--accent); }
+  svg { width: 100%; height: auto; display: block; }
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.78rem; color: var(--text); margin-top: 10px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .results { margin-top: 18px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .card { background: var(--accent-soft); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; text-align: center; }
+  .card .lbl { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 3px; }
+  .card .val { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--heading); font-variant-numeric: tabular-nums; }
+  .note { margin-top: 16px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+</style>
+
+<script>
+  (function () {
+    const svg = document.getElementById("plot-solape") as unknown as SVGSVGElement;
+    const slider = document.getElementById("aSlider") as HTMLInputElement;
+    const aValLabel = document.getElementById("aVal")!;
+    const expVal = document.getElementById("expVal")!;
+    const exiVal = document.getElementById("exiVal")!;
+    const statusNote = document.getElementById("statusNote")!;
+    const NS = "http://www.w3.org/2000/svg";
+
+    const COL = {
+      f1: "var(--accent)",
+      f2: "var(--moss)",
+      overlap: "var(--accent-soft)",
+      xp: "var(--heading)",
+      xi: "var(--text)",
+      axis: "var(--text-muted)",
+      text: "var(--text)",
+      bg: "transparent",
+    };
+
+    const Tmin = -2.5, Tmax = 2.5;
+    const PLOT_LEFT = 55, PLOT_RIGHT = 615;
+    const PLOT_W = PLOT_RIGHT - PLOT_LEFT;
+    const topVmin = -0.08, topVmax = 1.15;
+    const topY0 = 20, topY1 = 190;
+    const botVmin = -0.6, botVmax = 1.1;
+    const botY0 = 250, botY1 = 420;
+
+    const xPix = (t: number) => PLOT_LEFT + ((t - Tmin) / (Tmax - Tmin)) * PLOT_W;
+    const yPixTop = (v: number) => topY0 + ((topVmax - v) / (topVmax - topVmin)) * (topY1 - topY0);
+    const yPixBot = (v: number) => botY0 + ((botVmax - v) / (botVmax - botVmin)) * (botY1 - botY0);
+    const Lambda = (t: number) => Math.max(0, 1 - 2 * Math.abs(t));
+
+    function buildPoints(fn: (t: number) => number, yFn: (v: number) => number, N: number) {
+      const pts: string[] = [];
+      for (let i = 0; i <= N; i++) {
+        const t = Tmin + ((Tmax - Tmin) * i) / N;
+        pts.push(`${xPix(t).toFixed(2)},${yFn(fn(t)).toFixed(2)}`);
+      }
+      return pts.join(" ");
+    }
+
+    function el(tag: string, attrs: Record<string, string | number>) {
+      const e = document.createElementNS(NS, tag);
+      for (const k in attrs) e.setAttribute(k, String(attrs[k]));
+      return e;
+    }
+
+    function ExpFormula(a: number) {
+      const aa = Math.abs(a);
+      if (aa <= 0.5) return 1 / 3 - aa * aa + aa * aa * aa;
+      if (aa <= 1) return 1 / 6 + Math.pow(1 - aa, 3) / 3;
+      return 1 / 6;
+    }
+
+    function draw(a: number) {
+      svg.innerHTML = "";
+
+      svg.appendChild(el("line", { x1: PLOT_LEFT, y1: yPixTop(0), x2: PLOT_RIGHT, y2: yPixTop(0), stroke: COL.axis, "stroke-width": 1 }));
+      svg.appendChild(el("line", { x1: xPix(0), y1: topY0 - 5, x2: xPix(0), y2: topY1, stroke: COL.axis, "stroke-width": 1 }));
+
+      [-2, -1, 0, 1, 2].forEach((tt) => {
+        const x = xPix(tt);
+        svg.appendChild(el("line", { x1: x, y1: yPixTop(0) - 3, x2: x, y2: yPixTop(0) + 3, stroke: COL.axis }));
+        const txt = el("text", { x, y: yPixTop(0) + 16, "font-size": 11, "text-anchor": "middle", fill: COL.text, "font-family": "var(--font-body)" });
+        txt.textContent = String(tt);
+        svg.appendChild(txt);
+      });
+
+      const titleTop = el("text", { x: PLOT_LEFT, y: 12, "font-size": 12, fill: COL.text, "font-weight": "600", "font-family": "var(--font-display)" });
+      titleTop.textContent = "f1(t) y f2(t)";
+      svg.appendChild(titleTop);
+
+      const overlapPts: string[] = [];
+      const N = 400;
+      let anyOverlap = false;
+      for (let i = 0; i <= N; i++) {
+        const t = Tmin + ((Tmax - Tmin) * i) / N;
+        const f1 = Lambda(t - a / 2), f2 = Lambda(t + a / 2);
+        const m = Math.min(f1, f2);
+        if (m > 0) anyOverlap = true;
+        overlapPts.push(`${xPix(t).toFixed(2)},${yPixTop(m).toFixed(2)}`);
+      }
+      if (anyOverlap) {
+        const poly = overlapPts.slice();
+        poly.push(`${xPix(Tmax).toFixed(2)},${yPixTop(0).toFixed(2)}`);
+        poly.push(`${xPix(Tmin).toFixed(2)},${yPixTop(0).toFixed(2)}`);
+        svg.appendChild(el("polygon", { points: poly.join(" "), fill: COL.overlap, stroke: "none" }));
+      }
+
+      svg.appendChild(el("polyline", { points: buildPoints((t) => Lambda(t - a / 2), yPixTop, N), fill: "none", stroke: COL.f1, "stroke-width": 2.6 }));
+      svg.appendChild(el("polyline", { points: buildPoints((t) => Lambda(t + a / 2), yPixTop, N), fill: "none", stroke: COL.f2, "stroke-width": 2.6 }));
+
+      svg.appendChild(el("line", { x1: PLOT_LEFT, y1: yPixBot(0), x2: PLOT_RIGHT, y2: yPixBot(0), stroke: COL.axis, "stroke-width": 1 }));
+      svg.appendChild(el("line", { x1: xPix(0), y1: botY0 - 5, x2: xPix(0), y2: botY1, stroke: COL.axis, "stroke-width": 1 }));
+
+      [-2, -1, 0, 1, 2].forEach((tt) => {
+        const x = xPix(tt);
+        svg.appendChild(el("line", { x1: x, y1: yPixBot(0) - 3, x2: x, y2: yPixBot(0) + 3, stroke: COL.axis }));
+        const txt = el("text", { x, y: yPixBot(0) + 16, "font-size": 11, "text-anchor": "middle", fill: COL.text, "font-family": "var(--font-body)" });
+        txt.textContent = String(tt);
+        svg.appendChild(txt);
+      });
+
+      const titleBot = el("text", { x: PLOT_LEFT, y: botY0 - 30, "font-size": 12, fill: COL.text, "font-weight": "600", "font-family": "var(--font-display)" });
+      titleBot.textContent = "xp(t) = (f1+f2)/2   y   xi(t) = (f1-f2)/2";
+      svg.appendChild(titleBot);
+
+      svg.appendChild(el("polyline", { points: buildPoints((t) => (Lambda(t - a / 2) + Lambda(t + a / 2)) / 2, yPixBot, N), fill: "none", stroke: COL.xp, "stroke-width": 2.8 }));
+      svg.appendChild(el("polyline", { points: buildPoints((t) => (Lambda(t - a / 2) - Lambda(t + a / 2)) / 2, yPixBot, N), fill: "none", stroke: COL.xi, "stroke-width": 2.2, "stroke-dasharray": "6,3" }));
+
+      const ep = ExpFormula(a);
+      const ei = 1 / 3 - ep;
+      expVal.textContent = ep.toFixed(4);
+      exiVal.textContent = ei.toFixed(4);
+
+      statusNote.textContent =
+        Math.abs(a) >= 1
+          ? `|a| = ${a.toFixed(2)} ≥ 1, los soportes no se tocan. No hay zona sombreada, y Exp = Exi = 1/6 exactamente.`
+          : `|a| = ${a.toFixed(2)} < 1, los triángulos se superponen (zona sombreada). Esa área de solape es la que hace que Exp y Exi se aparten de 1/6.`;
+    }
+
+    slider.addEventListener("input", () => {
+      const a = parseFloat(slider.value);
+      aValLabel.textContent = a.toFixed(2);
+      draw(a);
+    });
+
+    document.querySelectorAll<HTMLButtonElement>(".solape-wrap .presets button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const a = parseFloat(btn.getAttribute("data-a")!);
+        slider.value = String(a);
+        aValLabel.textContent = a.toFixed(2);
+        draw(a);
+      });
+    });
+
+    draw(parseFloat(slider.value));
+  })();
+</script>

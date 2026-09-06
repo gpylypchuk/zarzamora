@@ -1,0 +1,33 @@
+---
+import { getEntry, getCollection, render } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { slugToHref } from "../utils/nav";
+import { SITE_NAME } from "../site.config.mjs";
+
+const home = await getEntry("notes", "index");
+if (!home) throw new Error("Falta la nota raíz src/content/notes/index.md");
+const { Content } = await render(home);
+
+const all = await getCollection("notes");
+const subjects = all.filter((e) => e.id.endsWith("/index"));
+---
+
+<BaseLayout title={SITE_NAME} description={home.data.description}>
+  <Content />
+
+  <div style="display:grid; gap:14px; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); margin-top:8px;">
+    {subjects.map((s) => (
+      <a
+        href={slugToHref(s.id)}
+        style="display:block; border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 20px; text-decoration:none; background:var(--bg-elevated);"
+      >
+        <div style="font-family:var(--font-display); font-weight:700; color:var(--heading); font-size:1.05rem;">
+          {s.data.title}
+        </div>
+        {s.data.description && (
+          <div style="font-size:0.85rem; color:var(--text-muted); margin-top:6px;">{s.data.description}</div>
+        )}
+      </a>
+    ))}
+  </div>
+</BaseLayout>

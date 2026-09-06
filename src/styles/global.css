@@ -1,0 +1,255 @@
+/* ============================================================
+   Zarzamora, sistema de diseño
+   Identidad oscura de bosque nocturno y zarza. Ninguno de los dos
+   modos es "blanco brillante, negro puro": el claro es una luz de
+   monte encapotado (verde musgo apagado), el oscuro es noche cerrada
+   de bosque, y el acento en ambos es el color de la mora madura.
+   Tipografía se mantiene (Fraunces + Lora + JetBrains Mono) porque
+   ya tenía carácter de sobra, el cambio de identidad va por color.
+   ============================================================ */
+
+:root {
+  --bg: #eef0e6;
+  --bg-elevated: #e3e7d8;
+  --border: #cfd6bd;
+  --text: #232922;
+  --text-muted: #5c6b57;
+  --heading: #171c15;
+  --accent: #7c2d5c;
+  --accent-soft: rgba(124, 45, 92, 0.12);
+  --accent-strong: #5e2246;
+  --moss: #3f5a44;
+  --moss-soft: rgba(63, 90, 68, 0.14);
+  --code-bg: #e2e6d3;
+
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Lora", Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --measure: 68ch;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0f1210;
+  --bg-elevated: #161c17;
+  --border: #262f27;
+  --text: #d6dcd1;
+  --text-muted: #8a9a89;
+  --heading: #f1ede4;
+  --accent: #c15b93;
+  --accent-soft: rgba(193, 91, 147, 0.14);
+  --accent-strong: #e07db0;
+  --moss: #6b8f71;
+  --moss-soft: rgba(107, 143, 113, 0.16);
+  --code-bg: #171e18;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1210;
+    --bg-elevated: #161c17;
+    --border: #262f27;
+    --text: #d6dcd1;
+    --text-muted: #8a9a89;
+    --heading: #f1ede4;
+    --accent: #c15b93;
+    --accent-soft: rgba(193, 91, 147, 0.14);
+    --accent-strong: #e07db0;
+    --moss: #6b8f71;
+    --moss-soft: rgba(107, 143, 113, 0.16);
+    --code-bg: #171e18;
+    color-scheme: dark;
+  }
+}
+
+* { box-sizing: border-box; }
+
+html { background: var(--bg); }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+::selection { background: var(--accent-soft); }
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+a:hover { text-decoration-color: var(--accent); }
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  color: var(--heading);
+  line-height: 1.25;
+  font-weight: 700;
+  margin: 1.6em 0 0.5em;
+}
+h1 { font-size: clamp(1.9rem, 1.5rem + 1.6vw, 2.6rem); margin-top: 0; letter-spacing: -0.01em; }
+h2 { font-size: 1.5rem; }
+h2::before { content: "❦ "; color: var(--accent); font-size: 0.8em; }
+h3 { font-size: 1.2rem; }
+
+p { margin: 0 0 1.1em; }
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.87em;
+  background: var(--code-bg);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+pre {
+  background: var(--code-bg);
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+}
+pre code { background: none; padding: 0; }
+
+blockquote {
+  margin: 1.4em 0;
+  padding: 0.2em 1.2em;
+  border-left: 3px solid var(--accent);
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.4em 0;
+  font-size: 0.94em;
+}
+th, td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; }
+th {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--heading);
+  background: var(--bg-elevated);
+}
+
+hr { border: none; border-top: 1px solid var(--border); margin: 2.2em 0; }
+
+.wikilink-broken {
+  color: var(--text-muted);
+  border-bottom: 1px dashed var(--text-muted);
+  cursor: help;
+}
+
+.tag-pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-decoration: none;
+}
+
+/* ---- layout shell ---- */
+.shell { display: grid; grid-template-columns: 250px minmax(0, 1fr); min-height: 100vh; }
+
+.sidebar {
+  background: var(--bg-elevated);
+  border-right: 1px solid var(--border);
+  padding: 28px 22px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.site-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.2rem;
+  color: var(--heading);
+  text-decoration: none;
+  display: block;
+  margin-bottom: 4px;
+}
+.site-tagline {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 22px;
+  font-style: italic;
+}
+
+.nav-group + .nav-group { margin-top: 20px; }
+
+.nav-group-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.nav-link {
+  display: block;
+  font-size: 0.92rem;
+  color: var(--text);
+  text-decoration: none;
+  padding: 5px 8px;
+  border-radius: var(--radius-sm);
+  margin: 1px 0;
+}
+.nav-link:hover { background: var(--bg); }
+.nav-link.active {
+  color: var(--accent);
+  background: var(--accent-soft);
+  font-weight: 600;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 40px 0;
+}
+
+.icon-btn {
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+main { padding: 8px 40px 80px; max-width: calc(var(--measure) + 80px); }
+.content { max-width: var(--measure); }
+
+@media (max-width: 860px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+  main { padding: 8px 22px 60px; }
+  .topbar { padding: 16px 22px 0; }
+}
+
+#search { margin-top: 6px; }

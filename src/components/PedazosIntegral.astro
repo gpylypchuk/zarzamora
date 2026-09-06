@@ -1,0 +1,139 @@
+---
+// Mismo criterio que SolapeTriangulos.astro, hereda colores del sitio
+// vía variables CSS en vez de tener su propia paleta.
+---
+
+<div class="pedazos-wrap">
+  <p class="sub">El vértice de f1 (en t=a/2) y el de f2 (en t=&minus;a/2) son los únicos lugares donde alguna de las dos deja de tener una fórmula fija. Por eso cortamos ahí, ni un lugar antes ni después.</p>
+
+  <div class="controls">
+    <label for="aSlider2">a =</label>
+    <input type="range" id="aSlider2" min="0" max="0.5" step="0.01" value="0.4" />
+    <span class="aval" id="aVal2">0.40</span>
+  </div>
+
+  <svg id="plot-pedazos" viewBox="0 0 640 300" xmlns="http://www.w3.org/2000/svg"></svg>
+
+  <div class="legend">
+    <span><i class="swatch" style="background:var(--accent)"></i> f1(t)</span>
+    <span><i class="swatch" style="background:var(--moss)"></i> f2(t)</span>
+    <span><i class="swatch" style="background:var(--accent-soft); border:1px solid var(--accent)"></i> Pedazo I / III</span>
+    <span><i class="swatch" style="background:var(--moss-soft); border:1px solid var(--moss)"></i> Pedazo II</span>
+  </div>
+
+  <p class="note" id="explain2"></p>
+</div>
+
+<style>
+  .pedazos-wrap { margin: 24px 0; }
+  .sub { margin: 0 0 16px; font-size: 0.85rem; color: var(--text-muted); }
+  .controls { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .controls label { font-family: var(--font-display); font-size: 0.88rem; font-weight: 600; color: var(--heading); }
+  input[type="range"] { flex: 1; accent-color: var(--accent); }
+  .aval { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent); min-width: 54px; text-align: right; font-size: 0.9rem; }
+  svg { width: 100%; height: auto; display: block; margin-top: 14px; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.78rem; color: var(--text); margin-top: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+  .note { margin-top: 14px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+</style>
+
+<script>
+  (function () {
+    const svg = document.getElementById("plot-pedazos") as unknown as SVGSVGElement;
+    const slider = document.getElementById("aSlider2") as HTMLInputElement;
+    const aValLabel = document.getElementById("aVal2")!;
+    const explain = document.getElementById("explain2")!;
+    const NS = "http://www.w3.org/2000/svg";
+
+    const COL = {
+      f1: "var(--accent)",
+      f2: "var(--moss)",
+      zoneI: "var(--accent-soft)",
+      zoneII: "var(--moss-soft)",
+      axis: "var(--text-muted)",
+      text: "var(--text)",
+      cut: "var(--text-muted)",
+    };
+
+    const Tmin = -1.2, Tmax = 1.2;
+    const LEFT = 55, RIGHT = 610, TOP = 30, BOT = 230;
+    const W = RIGHT - LEFT;
+    const Vmin = -0.05, Vmax = 1.15;
+
+    const xPix = (t: number) => LEFT + ((t - Tmin) / (Tmax - Tmin)) * W;
+    const yPix = (v: number) => TOP + ((Vmax - v) / (Vmax - Vmin)) * (BOT - TOP);
+    const Lambda = (t: number) => Math.max(0, 1 - 2 * Math.abs(t));
+
+    function el(tag: string, attrs: Record<string, string | number>) {
+      const e = document.createElementNS(NS, tag);
+      for (const k in attrs) e.setAttribute(k, String(attrs[k]));
+      return e;
+    }
+
+    function draw(a: number) {
+      svg.innerHTML = "";
+
+      const L1 = a / 2 - 0.5, R1 = -a / 2;
+      const L2 = -a / 2, R2 = a / 2;
+      const L3 = a / 2, R3 = -a / 2 + 0.5;
+
+      svg.appendChild(el("rect", { x: xPix(L1), y: TOP, width: xPix(R1) - xPix(L1), height: BOT - TOP, fill: COL.zoneI }));
+      svg.appendChild(el("rect", { x: xPix(L2), y: TOP, width: xPix(R2) - xPix(L2), height: BOT - TOP, fill: COL.zoneII }));
+      svg.appendChild(el("rect", { x: xPix(L3), y: TOP, width: xPix(R3) - xPix(L3), height: BOT - TOP, fill: COL.zoneI }));
+
+      svg.appendChild(el("line", { x1: LEFT, y1: yPix(0), x2: RIGHT, y2: yPix(0), stroke: COL.axis, "stroke-width": 1 }));
+      [-1, -0.5, 0, 0.5, 1].forEach((tt) => {
+        const x = xPix(tt);
+        svg.appendChild(el("line", { x1: x, y1: yPix(0) - 3, x2: x, y2: yPix(0) + 3, stroke: COL.axis }));
+        const txt = el("text", { x, y: yPix(0) + 16, "font-size": 11, "text-anchor": "middle", fill: COL.text, "font-family": "var(--font-body)" });
+        txt.textContent = String(tt);
+        svg.appendChild(txt);
+      });
+
+      const N = 300;
+      const p1: string[] = [], p2: string[] = [];
+      for (let i = 0; i <= N; i++) {
+        const t = Tmin + ((Tmax - Tmin) * i) / N;
+        p1.push(`${xPix(t).toFixed(2)},${yPix(Lambda(t - a / 2)).toFixed(2)}`);
+        p2.push(`${xPix(t).toFixed(2)},${yPix(Lambda(t + a / 2)).toFixed(2)}`);
+      }
+      svg.appendChild(el("polyline", { points: p1.join(" "), fill: "none", stroke: COL.f1, "stroke-width": 2.6 }));
+      svg.appendChild(el("polyline", { points: p2.join(" "), fill: "none", stroke: COL.f2, "stroke-width": 2.6 }));
+
+      [L1, -a / 2, a / 2, R3].forEach((tt) => {
+        const x = xPix(tt);
+        svg.appendChild(el("line", { x1: x, y1: TOP, x2: x, y2: BOT, stroke: COL.cut, "stroke-width": 1, "stroke-dasharray": "4,3" }));
+      });
+
+      svg.appendChild(el("circle", { cx: xPix(a / 2), cy: yPix(1), r: 4, fill: COL.f1 }));
+      svg.appendChild(el("circle", { cx: xPix(-a / 2), cy: yPix(1), r: 4, fill: COL.f2 }));
+      const lab1 = el("text", { x: xPix(a / 2) + 6, y: yPix(1) - 6, "font-size": 11, fill: COL.f1, "font-weight": 600, "font-family": "var(--font-body)" });
+      lab1.textContent = "vértice de f1, t=a/2";
+      svg.appendChild(lab1);
+      const lab2 = el("text", { x: xPix(-a / 2) - 6, y: yPix(1) - 6, "font-size": 11, fill: COL.f2, "font-weight": 600, "text-anchor": "end", "font-family": "var(--font-body)" });
+      lab2.textContent = "vértice de f2, t=-a/2";
+      svg.appendChild(lab2);
+
+      const midI = (L1 + R1) / 2, midII = (L2 + R2) / 2, midIII = (L3 + R3) / 2;
+      ["I", "II", "III"].forEach((name, idx) => {
+        const mid = [midI, midII, midIII][idx];
+        const txt = el("text", { x: xPix(mid), y: BOT - 8, "font-size": 12, "text-anchor": "middle", fill: COL.text, "font-weight": 700, "font-family": "var(--font-display)" });
+        txt.textContent = name;
+        svg.appendChild(txt);
+      });
+
+      explain.innerHTML =
+        `Los cortes verticales están en ${L1.toFixed(2)}, ${(-a / 2).toFixed(2)}, ${(a / 2).toFixed(2)} y ${R3.toFixed(2)}. ` +
+        `Los del medio son justo los vértices de f1 y f2 (los puntos de colores). Adentro de cada franja (I y III en un tono, II en el otro) ni f1 ni f2 cambian de fórmula, así que ahí adentro el producto f1&middot;f2 sí es un solo polinomio, y recién ahí se puede integrar con las reglas normales.`;
+    }
+
+    slider.addEventListener("input", () => {
+      const a = parseFloat(slider.value);
+      aValLabel.textContent = a.toFixed(2);
+      draw(a);
+    });
+
+    draw(parseFloat(slider.value));
+  })();
+</script>
