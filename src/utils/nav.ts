@@ -2,7 +2,9 @@ import { getCollection, type CollectionEntry } from "astro:content";
 
 export type NavGroup = {
   label: string;
-  description: string | null;
+  // Subtítulo de la tarjeta en el acordeón: `subtitle` del frontmatter
+  // si existe, con `description` como respaldo.
+  subtitle: string | null;
   indexSlug: string | null;
   items: CollectionEntry<"notes">[];
 };
@@ -36,13 +38,13 @@ export async function getNavGroups(): Promise<NavGroup[]> {
     if (subject === HERBARIO_DIR) continue;
 
     if (!bySubject.has(subject)) {
-      bySubject.set(subject, { label: subject, description: null, indexSlug: null, items: [] });
+      bySubject.set(subject, { label: subject, subtitle: null, indexSlug: null, items: [] });
     }
     const group = bySubject.get(subject)!;
 
     if (parts.length === 1 && isFolderIndex(entry)) {
       group.label = entry.data.title;
-      group.description = entry.data.description ?? null;
+      group.subtitle = entry.data.subtitle ?? entry.data.description ?? null;
       group.indexSlug = entry.id;
     } else {
       group.items.push(entry);

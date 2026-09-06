@@ -1,5 +1,6 @@
 ---
 title: Señales y Sistemas
+subtitle: ITBA · 16.68
 description: Notas de la cursada de Señales y Sistemas (16.68) en ITBA.
 tags: [senales-y-sistemas, itba]
 order: 0

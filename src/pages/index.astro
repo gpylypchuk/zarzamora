@@ -45,7 +45,7 @@ function toRoman(n: number): string {
           <div class="chapter-num">{toRoman(i + 1)}</div>
           <div class="chapter-titles">
             <div class="chapter-title">{group.label}</div>
-            {group.description && <div class="chapter-sub">{group.description}</div>}
+            {group.subtitle && <div class="chapter-sub">{group.subtitle}</div>}
           </div>
           <svg class="chapter-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
             <path d="m9 6 6 6-6 6"></path>
