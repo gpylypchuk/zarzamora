@@ -4,8 +4,9 @@ description: Notas creciendo en la espesura.
 order: 0
 ---
 
-# Bienvenido
-
-Zarzamora es donde voy documentando lo que aprendo, notas que crecen despacio y se enredan entre sí como una zarza.
-
-## Materias
+<!--
+  El cuerpo de esta nota ya no se renderiza: la portada la arma el
+  componente Hero + el índice del grimorio (ver src/pages/index.astro).
+  El archivo se conserva solo por el frontmatter, que sirve de fallback
+  para la meta description del sitio.
+-->

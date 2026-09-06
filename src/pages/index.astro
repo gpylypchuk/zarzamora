@@ -1,33 +1,189 @@
 ---
-import { getEntry, getCollection, render } from "astro:content";
+import { getEntry } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { slugToHref } from "../utils/nav";
+import Hero from "../components/Hero.astro";
+import { getNavGroups, slugToHref } from "../utils/nav";
 import { SITE_NAME } from "../site.config.mjs";
 
+// index.md ya no se renderiza en la portada (lo reemplaza el Hero), se
+// conserva solo por su frontmatter para el fallback de description en SEO.
 const home = await getEntry("notes", "index");
-if (!home) throw new Error("Falta la nota raíz src/content/notes/index.md");
-const { Content } = await render(home);
 
-const all = await getCollection("notes");
-const subjects = all.filter((e) => e.id.endsWith("/index"));
+// getNavGroups() ya excluye la carpeta herbario.
+const groups = await getNavGroups();
+
+function toRoman(n: number): string {
+  const table: [number, string][] = [
+    [1000, "M"], [900, "CM"], [500, "D"], [400, "CD"],
+    [100, "C"], [90, "XC"], [50, "L"], [40, "XL"],
+    [10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"],
+  ];
+  let out = "";
+  for (const [value, sym] of table) {
+    while (n >= value) {
+      out += sym;
+      n -= value;
+    }
+  }
+  return out;
+}
 ---
 
-<BaseLayout title={SITE_NAME} description={home.data.description}>
-  <Content />
+<BaseLayout title={SITE_NAME} description={home?.data.description}>
+  <Hero />
 
-  <div style="display:grid; gap:14px; grid-template-columns:repeat(auto-fill, minmax(220px,1fr)); margin-top:8px;">
-    {subjects.map((s) => (
-      <a
-        href={slugToHref(s.id)}
-        style="display:block; border:1px solid var(--border); border-radius:var(--radius-md); padding:18px 20px; text-decoration:none; background:var(--bg-elevated);"
+  <section class="index">
+    <div class="index-label">Índice del grimorio</div>
+
+    {groups.map((group, i) => (
+      <div
+        class:list={["chapter", { open: i === 0 }]}
+        data-chapter
+        data-accent={i % 2 === 0 ? "violet" : "green"}
       >
-        <div style="font-family:var(--font-display); font-weight:700; color:var(--heading); font-size:1.05rem;">
-          {s.data.title}
+        <div class="chapter-head" data-toggle>
+          <div class="chapter-num">{toRoman(i + 1)}</div>
+          <div class="chapter-titles">
+            <div class="chapter-title">{group.label}</div>
+            {group.description && <div class="chapter-sub">{group.description}</div>}
+          </div>
+          <svg class="chapter-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+            <path d="m9 6 6 6-6 6"></path>
+          </svg>
         </div>
-        {s.data.description && (
-          <div style="font-size:0.85rem; color:var(--text-muted); margin-top:6px;">{s.data.description}</div>
-        )}
-      </a>
+        <div class="chapter-body">
+          <div class="chapter-body-inner">
+            {group.items.map((entry) => (
+              <a class="note-row" href={slugToHref(entry.id)}>
+                <span class="berry"></span>
+                <span class="note-title">{entry.data.title}</span>
+                {entry.data.tags?.[0] && <span class="note-tag">{entry.data.tags[0]}</span>}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
     ))}
-  </div>
+  </section>
 </BaseLayout>
+
+<style>
+  .index {
+    max-width: 720px;
+    margin: 20px auto 100px;
+    padding: 0 24px;
+  }
+  .index-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--moss);
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  .chapter {
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg-card);
+    margin-bottom: 16px;
+    overflow: hidden;
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
+  .chapter.open {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-soft), 0 12px 34px rgba(132, 82, 184, 0.22);
+  }
+  .chapter-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 24px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .chapter-num {
+    font-family: var(--font-roman);
+    color: var(--accent);
+    font-size: 1.3rem;
+    width: 34px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .chapter-titles { flex: 1; }
+  .chapter-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: var(--heading);
+  }
+  .chapter-sub {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 2px;
+  }
+  .chapter-chevron {
+    color: var(--text-muted);
+    transition: transform 0.25s;
+    flex-shrink: 0;
+  }
+  .chapter.open .chapter-chevron { transform: rotate(90deg); color: var(--accent); }
+
+  /* Segundo acento: materias en la rama musgo en vez de la rama amatista.
+     El numeral romano queda siempre en violeta, es identidad de índice. */
+  .chapter[data-accent="green"] .note-row .berry { background: var(--accent); }
+  .chapter[data-accent="green"].open {
+    border-color: var(--moss);
+    box-shadow: 0 0 0 1px var(--moss-soft), 0 12px 34px rgba(79, 122, 63, 0.24);
+  }
+  .chapter[data-accent="green"].open .chapter-chevron { color: var(--moss); }
+  .chapter[data-accent="green"] .note-row:hover { background: var(--moss-soft); }
+
+  .chapter-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease;
+  }
+  .chapter.open .chapter-body { grid-template-rows: 1fr; }
+  .chapter-body-inner { overflow: hidden; }
+
+  .note-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 13px 24px 13px 74px;
+    border-top: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--text);
+  }
+  .note-row:hover { background: var(--accent-soft); }
+  .note-row .berry {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--moss);
+    flex-shrink: 0;
+  }
+  .note-row .note-title { font-size: 1.05rem; }
+  .note-row .note-tag {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .chapter-body { transition: none; }
+  }
+</style>
+
+<script>
+  document.querySelectorAll("[data-toggle]").forEach((head) => {
+    head.addEventListener("click", () => {
+      head.closest("[data-chapter]")?.classList.toggle("open");
+    });
+  });
+</script>

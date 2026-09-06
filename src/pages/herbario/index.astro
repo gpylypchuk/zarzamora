@@ -1,0 +1,84 @@
+---
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { slugToHref, HERBARIO_DIR } from "../../utils/nav";
+
+const entries = (await getCollection("notes"))
+  .filter((entry) => entry.id.startsWith(`${HERBARIO_DIR}/`))
+  .sort((a, b) => {
+    const da = a.data.date?.getTime() ?? 0;
+    const db = b.data.date?.getTime() ?? 0;
+    return db - da;
+  });
+
+const fmt = new Intl.DateTimeFormat("es", { day: "numeric", month: "short", year: "numeric" });
+---
+
+<BaseLayout
+  title="El Herbario"
+  description="El rincón personal de Zarzamora, fuera del temario: hojas prensadas entre las páginas del grimorio."
+>
+  <article class="prose">
+    <a class="back-link" href={import.meta.env.BASE_URL}>← Volver al índice</a>
+
+    <h1>El Herbario</h1>
+    <p class="herbario-intro">
+      El rincón personal, fuera del temario, para que no quede sepultado a medida que se acumulan las materias.
+    </p>
+
+    {entries.length === 0 ? (
+      <p class="herbario-empty">Todavía no hay hojas prensadas acá.</p>
+    ) : (
+      <ul class="herbario-list">
+        {entries.map((entry) => (
+          <li>
+            <a class="note-row" href={slugToHref(entry.id)}>
+              <span class="berry"></span>
+              <span class="note-title">{entry.data.title}</span>
+              {entry.data.date && (
+                <span class="note-date">{fmt.format(entry.data.date)}</span>
+              )}
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </article>
+</BaseLayout>
+
+<style>
+  .herbario-intro { color: var(--text-muted); font-style: italic; }
+  .herbario-empty { color: var(--text-muted); font-style: italic; margin-top: 28px; }
+
+  .herbario-list {
+    list-style: none;
+    padding: 0;
+    margin: 28px 0 0;
+    border-top: 1px solid var(--border);
+  }
+  .herbario-list .note-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 14px 8px;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    color: var(--text);
+  }
+  .herbario-list .note-row:hover { background: var(--accent-soft); }
+  .herbario-list .berry {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--moss);
+    flex-shrink: 0;
+  }
+  .herbario-list .note-title { font-size: 1.05rem; }
+  .herbario-list .note-date {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+  }
+</style>

@@ -3,7 +3,9 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 ---
 
 <BaseLayout title="Página no encontrada">
-  <h1>404</h1>
-  <p>Esta nota no existe, o creció en otra parte de la zarza.</p>
-  <p><a href={import.meta.env.BASE_URL}>Volver al inicio</a></p>
+  <article class="prose">
+    <h1>404</h1>
+    <p>Esta nota no existe, o creció en otra parte de la zarza.</p>
+    <p><a href={import.meta.env.BASE_URL}>Volver al inicio</a></p>
+  </article>
 </BaseLayout>

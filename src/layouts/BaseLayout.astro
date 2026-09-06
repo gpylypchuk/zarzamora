@@ -1,8 +1,6 @@
 ---
 import "../styles/global.css";
 import "katex/dist/katex.min.css";
-import Sidebar from "../components/Sidebar.astro";
-import ThemeToggle from "../components/ThemeToggle.astro";
 import { SITE_NAME, SITE_TAGLINE } from "../site.config.mjs";
 
 interface Props {
@@ -41,34 +39,45 @@ const ogImageURL = new URL(`${import.meta.env.BASE_URL}og-image.png`, Astro.site
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href={`${import.meta.env.BASE_URL}pagefind/pagefind-ui.css`} />
-
-    <script is:inline>
-      // Se corre antes de pintar para que no haya flash de tema incorrecto.
-      (function () {
-        var saved = localStorage.getItem("theme");
-        var theme =
-          saved || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-        document.documentElement.setAttribute("data-theme", theme);
-      })();
-    </script>
   </head>
   <body>
-    <div class="shell">
-      <Sidebar />
-      <div>
-        <div class="topbar">
-          <ThemeToggle />
+    <div class="page">
+      <div class="topbar">
+        <div class="search-pill">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m20 20-3.5-3.5"></path>
+          </svg>
+          <div class="pagefind-search-wrap"><div id="pagefind-search"></div></div>
         </div>
-        <main>
-          <div class="content">
-            <slot />
-          </div>
-        </main>
       </div>
+
+      <main>
+        <slot />
+      </main>
     </div>
+
+    <script is:inline define:vars={{ base: import.meta.env.BASE_URL.replace(/\/$/, "") }}>
+      // Pagefind solo existe después de un build (npm run build), no en dev.
+      // Si el archivo no existe (404), el script no carga y la pastilla de
+      // búsqueda queda inerte, sin romper el resto de la página.
+      const script = document.createElement("script");
+      script.src = `${base}/pagefind/pagefind-ui.js`;
+      script.onload = () => {
+        if (window.PagefindUI) {
+          new window.PagefindUI({
+            element: "#pagefind-search",
+            showSubResults: true,
+            showImages: false,
+            translations: { placeholder: "Buscar en la espesura…" },
+          });
+        }
+      };
+      document.head.appendChild(script);
+    </script>
   </body>
 </html>
