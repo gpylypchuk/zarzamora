@@ -78,6 +78,39 @@ body::before {
 }
 .page > main { flex: 1 0 auto; }
 
+/* ---------- luciérnagas del hero (portada) ----------
+   Los .firefly los crea un <script> en Hero.astro con document.createElement,
+   así que NO llevan el hash de scope de Astro. Sus estilos y sus @keyframes
+   tienen que estar en CSS global, si no, no se aplican. Usan --gold. */
+#fireflies {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.firefly {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px 2px rgba(185, 160, 107, 0.8);
+  animation: firefly-drift 9s ease-in-out infinite, firefly-glow 3s ease-in-out infinite;
+  opacity: 0;
+}
+@keyframes firefly-drift {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(var(--dx, 20px), var(--dy, -30px)); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes firefly-glow {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .firefly { animation: none; opacity: 0.55; }
+}
+
 ::selection { background: var(--accent-soft); }
 
 a {
