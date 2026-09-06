@@ -1,26 +1,31 @@
 # Zarzamora
 
-Notas creciendo en la espesura. Bosque digital de notas de Suipaya, hecho con Astro.
+Notas creciendo en la espesura.
+
+Bosque digital de notas personal, hecho con Astro. Apuntes de facultad organizados por materia, con wikilinks estilo Obsidian, LaTeX y buscador de texto completo. Sin grafo ni panel de backlinks, a propósito.
+
+https://gpylypchuk.github.io/zarzamora/
 
 ## Stack
 
-- [Astro](https://astro.build) 7, contenido como colecciones (`astro:content`, loader `glob`).
-- Markdown/MDX con `remark-math` + `rehype-katex` para LaTeX, y un plugin propio (`src/utils/remark-wikilinks.mjs`) para wikilinks estilo Obsidian `[[Nota]]` / `[[Nota|Alias]]`.
-- [Pagefind](https://pagefind.app) para búsqueda de texto completo (se indexa en `npm run build`, no funciona en `npm run dev`).
-- Sin grafo ni panel de backlinks a propósito, la navegación es por carpetas (una carpeta por materia).
+- Astro 7, colecciones de contenido (`astro:content`, loader `glob`)
+- Markdown/MDX con `remark-math` + `rehype-katex` para LaTeX
+- Wikilinks propios (`[[Nota]]`, `[[Nota|Alias]]`) vía un plugin remark casero
+- Pagefind para búsqueda de texto completo
+- Deploy automático a GitHub Pages vía GitHub Actions
 
 ## Desarrollo
 
 ```bash
 npm install
-npm run dev       # servidor local, sin buscador (pagefind corre solo en build)
-npm run build     # build de producción + indexado de pagefind
-npm run preview   # sirve el build de dist/ localmente, con buscador funcionando
+npm run dev       # servidor local, sin buscador (Pagefind corre en build)
+npm run build     # build de producción + indexado de Pagefind
+npm run preview   # sirve dist/ localmente, con buscador funcionando
 ```
 
-## Escribir una nota nueva
+## Escribir una nota
 
-1. Crear el archivo en `src/content/notes/<materia>/<nombre-de-nota>.md` (o `.mdx` si la nota necesita embeber un componente interactivo).
+1. Crear `src/content/notes/<materia>/<nota>.md` (o `.mdx` para embeber componentes interactivos).
 2. Frontmatter mínimo:
 
    ```yaml
@@ -31,23 +36,23 @@ npm run preview   # sirve el build de dist/ localmente, con buscador funcionando
    ---
    ```
 
-3. Si la materia es nueva, crear también `src/content/notes/<materia>/index.md` con su propio `title` y `description`, eso es lo que la convierte en un grupo del menú lateral y en una tarjeta de la home.
-4. Para linkear a otra nota, usar `[[Título exacto de la nota]]` o `[[Título|texto a mostrar]]`.
+3. Materia nueva, crear también `src/content/notes/<materia>/index.md` con `title`, `subtitle` (por ejemplo "ITBA · 16.68") y `description`. Aparece sola en el índice de la portada, sin tocar código.
+4. Algo fuera del temario, personal, va en `src/content/notes/herbario/`, con `date` en vez de `order`.
+5. Para linkear otra nota, `[[Título exacto]]` o `[[Título|texto a mostrar]]`.
 
 ## Estructura
 
 ```
 src/
-  content/notes/          Todo el contenido, organizado por carpeta = materia
-  content.config.ts       Definición de la colección "notes" y su schema
-  components/             Componentes de UI y visualizaciones interactivas
-  layouts/BaseLayout.astro
-  pages/                  index.astro (home), [...slug].astro (notas), 404.astro
-  styles/global.css       Sistema de diseño (tokens de color, tipografía)
-  utils/                  nav.ts, remark-wikilinks.mjs, noteMap.mjs
-  site.config.mjs         Nombre del sitio, tagline, URL base
+  content/notes/     Contenido, organizado por carpeta = materia (+ herbario/)
+  content.config.ts  Esquema de la colección
+  components/        Hero, visualizaciones interactivas
+  layouts/           BaseLayout.astro
+  pages/             index.astro, herbario/index.astro, [...slug].astro, 404.astro
+  styles/            Tokens de color y tipografía
+  utils/             nav.ts, remark-wikilinks.mjs, noteMap.mjs
 ```
 
 ## Deploy
 
-Push a `main` dispara `.github/workflows/deploy.yml`, que buildea y publica en GitHub Pages automáticamente. No hace falta ningún paso manual.
+Push a `main` dispara `.github/workflows/deploy.yml`, que buildea y publica en GitHub Pages solo.
